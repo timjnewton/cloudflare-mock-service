@@ -9,7 +9,7 @@ compatibility_date = "2021-10-07"
 
 
 kv_namespaces = [ 
-  { binding = "KV", id = "d6d7d039a850404b8d22f6de0c53cdd2",  preview_id = "6a8ad7d41e0b48f083889a89d3084051" }
+  { binding = "KV", id = "f1b6bf1bf23e451da4fdac5b8c22d076",  preview_id = "6a8ad7d41e0b48f083889a89d3084051" }
 ]
 
 #[triggers]
