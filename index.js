@@ -32,24 +32,7 @@ if (request.bodyUsed)
 // remove the cloudflare part of the request as we dont need this info
 delete request["cf"]
 
-//const res = await KV.put(user + "~" + Date.now().toString(), JSON.stringify(request), {"expirationTtl" : "600", metadata: {someMetadataKey: "someMetadataValue"}} );
 await KV.put(user + "~" + Date.now().toString(), JSON.stringify(request), {expirationTtl : 600} );
-
-// var myHeaders = new Headers();
-// myHeaders.append("Authorization", "Bearer NRCmoeMzL_In4tETJF5lu7GLzSQgJBCjeGKqovOt");
-// myHeaders.append("Content-Type", "text/plain");
-
-// var raw = "test";
-
-// var requestOptions = {
-//   method: 'PUT',
-//   headers: myHeaders,
-//   body: raw,
-//   redirect: 'follow'
-// };
-
-// const res = await fetch(`https://api.cloudflare.com/client/v4/accounts/d386dce443b620e59942b0e38c9679ee/storage/kv/namespaces/d6d7d039a850404b8d22f6de0c53cdd2/values/${user + "~" + Date.now().toString()}?expiration_ttl=600`, requestOptions)
-// console.log(`Result from writting KV : ${JSON.stringify(res)}`)
 
 return new Response(JSON.stringify(request), {
     headers: { 'content-type': 'application/json' },
