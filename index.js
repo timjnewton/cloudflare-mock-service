@@ -104,7 +104,8 @@ async function getstatus(request) {
     })  
   }
   
-  let html = `<head><style> .styled-table {
+  let html = `<head>
+  <style> .styled-table {
     border-collapse: collapse;
     margin: 25px 0;
     font-size: 0.9em;
@@ -137,7 +138,7 @@ async function getstatus(request) {
   color: #009879;
 }
 
-</style></head><body><table class="styled-table"><tr><th>URL</th><th>Request Date</th><th>Request body</th></tr>`;
+</style></head><body><table class="styled-table"><tr><th>URL</th><th>Request Date</th><th>Request Details</th></tr>`;
 
   for (item of kvs) {
     const monitor = JSON.parse(await KV.get(item.name))
@@ -146,7 +147,7 @@ async function getstatus(request) {
     const urlToDisplay = (item.name).split("~")[0]
     const formattedDate = getDateTimeFromTimestamp(epochTime);
     html += `<tr><td>${urlToDisplay}</td><td>${formattedDate}</td>
-    <td>${JSON.stringify(monitor)}</td></tr>`
+    <td><code>${JSON.stringify(monitor)}</code></td></tr>`
   }
 
   html += `</table>
