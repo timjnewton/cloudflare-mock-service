@@ -5,9 +5,12 @@ addEventListener('fetch', event => {
 
   console.log(`add : ${addr}  path : ${path}`)
 
-    if (path.startsWith('/status/') && event.request.method === "GET") {
-      //event.respondWith(getstatus(event.request));
-      event.respondWith(new Response())
+    if (path.includes(`favicon.ico`))
+    {
+      event.respondWith(new Response("",{ status: 404 }));
+    }
+    else if (path.startsWith('/status/') && event.request.method === "GET") {
+      event.respondWith(getstatus(event.request))
     }
     else
     {
@@ -44,7 +47,7 @@ if (path !== null && path !== "")
 // remove the cloudflare part of the request as we dont need this info
 delete request["cf"]
 
-await KV.put(user + "~" + Date.now().toString(), JSON.stringify(request), {expirationTtl : 600} );
+await KV.put(user + "~" + Date.now().toString(), JSON.stringify(request), {expirationTtl : 3600} );
 
 return new Response(JSON.stringify(request), {
     headers: { 'content-type': 'application/json' },
@@ -61,13 +64,12 @@ async function getKVs(url) {
     return [];
   }
   console.log("pre kv list")
-  //const res = await KV.list();
-  let res = [] //await KV.list();
+  const res = await KV.list();
+  //let res = [] //await KV.list();
   console.log("pre-post kv list")
   if (true || res.length === 0)
   {
     console.log("kv length is 0")
-    return [];
   }
   return res.keys.filter((x) => (x.name.startsWith(url + "~")));
 
@@ -77,7 +79,7 @@ async function getKVs(url) {
 async function getstatus(request) {
 
   console.log("in getStatus()")
-  return new Response("hello world", { status: 200 })
+  //return new Response("hello world", { status: 200 })
   const url = new URL(request.url)
     // Make sure we have the minimum necessary query parameters.
   if (!url.searchParams.has("url")) {
@@ -135,12 +137,16 @@ async function getstatus(request) {
   color: #009879;
 }
 
-</style></head><body><table class="styled-table"><tr><th>URL</th><th>Last Success</th><th>Last Fail</th><th>Frequency (secs)</th></tr>`;
+</style></head><body><table class="styled-table"><tr><th>URL</th><th>Request Date</th><th>Request body</th></tr>`;
 
   for (item of kvs) {
-    const monitor = JSON.parse(await KV.get(item.name));
-    html += `<tr><td>${item.name}</td><td>${item.last_success == null || item.last_success === "" ? "" : getDateTimeFromTimestamp(parseInt(item.last_success))}</td>
-    <td>${item.last_failed == null || item.last_failed === "" ? "" : getDateTimeFromTimestamp(parseInt(item.last_failed))}</td><td>${monitor == null ? "?" : monitor.frequency}</td></tr>`
+    const monitor = JSON.parse(await KV.get(item.name))
+    const epochTime = parseInt((item.name).split("~")[1])
+    console.log(`epochTime ${epochTime}`)
+    const urlToDisplay = (item.name).split("~")[0]
+    const formattedDate = getDateTimeFromTimestamp(epochTime);
+    html += `<tr><td>${urlToDisplay}</td><td>${formattedDate}</td>
+    <td>${JSON.stringify(monitor)}</td></tr>`
   }
 
   html += `</table>
@@ -153,4 +159,9 @@ async function getstatus(request) {
     },
   });
 
+}
+
+function getDateTimeFromTimestamp(unixTimeStamp) {
+  let date = new Date(unixTimeStamp);
+  return ('0' + date.getDate()).slice(-2) + '/' + ('0' + (date.getMonth() + 1)).slice(-2) + '/' + date.getFullYear() + ' ' + ('0' + date.getHours()).slice(-2) + ':' + ('0' + date.getMinutes()).slice(-2);
 }
