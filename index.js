@@ -56,7 +56,7 @@ return new Response(JSON.stringify(request), {
 
 }
 
-async function getKVs(url) {
+async function getKVs(url, maxRecords) {
 
   console.log("in getKVs");
   if (url === null || url === "")
@@ -64,14 +64,22 @@ async function getKVs(url) {
     return [];
   }
   console.log("pre kv list")
-  const res = await KV.list();
+  //const res = await KV.list({prefix: url, limit: maxRecords});
+  const res = await KV.list({prefix: url + "~"});
+  //return res.keys.filter((x) => (x.name.startsWith(url + "~"))).slice(0,maxRecords)
   //let res = [] //await KV.list();
   console.log("pre-post kv list")
+  
   if (true || res.length === 0)
   {
     console.log("kv length is 0")
   }
-  return res.keys.filter((x) => (x.name.startsWith(url + "~")));
+
+  // the following extracts the keys from the json returned by the KV.list() and then reverses the array
+  // so the most recent records are at the start then takes the first maxRecords using the slice() method
+
+  //return res.keys.slice().reverse().filter((x) => (x.name.startsWith(url + "~"))).slice(0,maxRecords);
+  return res.keys.slice().reverse().slice(0,maxRecords);
 
 }
 
@@ -81,16 +89,23 @@ async function getstatus(request) {
   console.log("in getStatus()")
   //return new Response("hello world", { status: 200 })
   const url = new URL(request.url)
+
+  let maxRecords = 100;
     // Make sure we have the minimum necessary query parameters.
   if (!url.searchParams.has("url")) {
     console.log("returning 403")
     return new Response("Missing query parameter url", { status: 403 })
   }
+  
+  if (url.searchParams.has("max-records")) {
+    maxRecords = parseInt(url.searchParams.get('max-records'))
+  }
+  console.log(`max-records : ${url.searchParams.get('max-records')}`)
 
   console.log(`searchurl is : ${url.searchParams.get("url")}`)
   let searchUrl = url.searchParams.get('url')
 
-  const kvs = await getKVs(searchUrl);
+  const kvs = await getKVs(searchUrl,maxRecords);
 
   console.log(`post get kvs length : ${kvs.length} `)
   if (kvs === null || kvs.length === 0)
@@ -111,7 +126,9 @@ async function getstatus(request) {
     font-size: 0.9em;
     font-family: sans-serif;
     min-width: 400px;
+    width: 1000px;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+    table-layout: auto;
 }
 .styled-table thead tr {
   background-color: #009879;
@@ -121,6 +138,9 @@ async function getstatus(request) {
 .styled-table th,
 .styled-table td {
     padding: 12px 15px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    width: auto !important;
 }
 .styled-table tbody tr {
   border-bottom: 1px solid #dddddd;
@@ -147,7 +167,7 @@ async function getstatus(request) {
     const urlToDisplay = (item.name).split("~")[0]
     const formattedDate = getDateTimeFromTimestamp(epochTime);
     html += `<tr><td>${urlToDisplay}</td><td>${formattedDate}</td>
-    <td><code>${JSON.stringify(monitor)}</code></td></tr>`
+    <td>${JSON.stringify(monitor)}</td></tr>`
   }
 
   html += `</table>
